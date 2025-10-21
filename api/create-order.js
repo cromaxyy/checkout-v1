@@ -11,7 +11,6 @@ export default async function handler(req, res) {
   try {
     const { method, buyer, bumps = [] } = req.body || {};
 
-    // validações básicas
     if (!method || !["pix", "card", "credit_card"].includes(method)) {
       return res.status(400).json({ error: "Forma de pagamento inválida" });
     }
@@ -19,16 +18,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Dados do comprador incompletos" });
     }
 
-    // limpa CPF
     const cpf = String(buyer.cpf).replace(/\D/g, "").slice(0, 11);
     if (cpf.length !== 11) {
-      return res.status(400).json({
-        error: "CPF inválido",
-        hint: "Use 12345678909 (somente números).",
-      });
+      return res.status(400).json({ error: "CPF inválido" });
     }
 
-    // produtos
     const items = [
       { amount: 3700, description: "Produto 1", quantity: 1, code: "produto1" },
     ];
@@ -46,7 +40,6 @@ export default async function handler(req, res) {
 
     const totalAmount = items.reduce((acc, item) => acc + item.amount, 0);
 
-    // payload base
     const basePayload = {
       items,
       customer: {
@@ -56,15 +49,14 @@ export default async function handler(req, res) {
         type: "individual",
         phones: {
           mobile_phone: {
-            country_code: "55", // Brasil
-            area_code: "11",    // SP (padrão para sandbox)
-            number: "999999999" // número fictício
+            country_code: "55",
+            area_code: "11",
+            number: "999999999"
           }
         }
       },
     };
 
-    // forma de pagamento
     const payments =
       method === "pix"
         ? [
@@ -86,10 +78,18 @@ export default async function handler(req, res) {
               payment_method: "credit_card",
               amount: totalAmount,
               capture: true,
+              billing: {
+                address: {
+                  line_1: "Rua Exemplo, 123",
+                  zip_code: "01311000",
+                  city: "São Paulo",
+                  state: "SP",
+                  country: "BR"
+                }
+              },
               credit_card: {
                 operation_type: "auth_and_capture",
                 installments: 1,
-                // Cartão de teste (sandbox)
                 card: {
                   number: "4000000000000010",
                   holder_name: buyer.nome,
