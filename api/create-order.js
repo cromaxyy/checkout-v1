@@ -54,6 +54,13 @@ export default async function handler(req, res) {
         email: buyer.email,
         document: cpf,
         type: "individual",
+        phones: {
+          mobile_phone: {
+            country_code: "55", // Brasil
+            area_code: "11",    // SP (padrão para sandbox)
+            number: "999999999" // número fictício
+          }
+        }
       },
     };
 
@@ -82,6 +89,7 @@ export default async function handler(req, res) {
               credit_card: {
                 operation_type: "auth_and_capture",
                 installments: 1,
+                // Cartão de teste (sandbox)
                 card: {
                   number: "4000000000000010",
                   holder_name: buyer.nome,
