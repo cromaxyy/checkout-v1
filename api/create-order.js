@@ -79,13 +79,14 @@ export default async function handler(req, res) {
               amount: totalAmount,
               capture: true,
               billing: {
+                name: buyer.nome,
                 address: {
                   line_1: "Rua Exemplo, 123",
                   zip_code: "01311000",
                   city: "São Paulo",
                   state: "SP",
-                  country: "BR"
-                }
+                  country: "BR",
+                },
               },
               credit_card: {
                 operation_type: "auth_and_capture",
