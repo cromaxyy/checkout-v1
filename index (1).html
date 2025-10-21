@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkout — Produto 1</title>
+  <style>
+    :root{
+      --bg: #0b0b0f;
+      --card: #141418;
+      --card-2: #191a20;
+      --text: #e7e7ee;
+      --muted: #a1a1b3;
+      --line: rgba(255,255,255,.08);
+      --accent: #10b981;
+      --accent-2: #0ea371;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(135deg,#0a0a0a 0%,#15161b 100%);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+    a{color:inherit}
+    .wrap{max-width:1100px;margin:40px auto;padding:0 16px}
+    .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:24px}
+    @media (max-width: 920px){.grid{grid-template-columns:1fr;}.summary{order:-1}}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .pad{padding:24px}
+    .title{font-weight:800;letter-spacing:.2px}
+    .muted{color:var(--muted)}
+    .hr{height:1px;background:var(--line);margin:16px 0}
+    .tag{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(16,185,129,.12);color:#a7f3d0;font-weight:600;font-size:12px;border:1px solid rgba(16,185,129,.35)}
+    .price{font-size:28px;font-weight:800}
+    .row{display:flex;gap:12px}
+    .col{flex:1}
+    label.small{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type="text"],input[type="email"]{
+      width:100%;padding:14px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card-2);color:var(--text);outline:none;
+    }
+    input[type="text"]:focus,input[type="email"]:focus{border-color:#2dd4bf;box-shadow:0 0 0 4px rgba(45,212,191,.15)}
+    .pay-select{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .btn-tab{
+      appearance:none;border:1px solid var(--line);background:var(--card-2);padding:14px 16px;border-radius:12px;color:var(--text);font-weight:700;cursor:pointer;text-align:center;transition:all .18s ease;
+    }
+    .btn-tab[aria-pressed="true"]{border-color:#34d399;background:rgba(16,185,129,.12);box-shadow:inset 0 0 0 1px rgba(16,185,129,.35)}
+    .hide{display:none}
+    .ob-list{display:flex;flex-direction:column;gap:10px}
+    .ob-item{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line);background:var(--card-2);border-radius:12px}
+    .ob-item input{width:18px;height:18px;margin-top:2px;accent-color:#10b981;cursor:pointer}
+    .ob-title{font-weight:700}
+    .badge{font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+    .summary .line{display:flex;align-items:center;justify-content:space-between;margin:12px 0}
+    .total{font-size:26px;font-weight:900}
+    .cta{
+      width:100%;padding:16px 18px;border-radius:14px;border:0;cursor:pointer;font-weight:900;
+      color:#08110e;background:linear-gradient(0deg,#10b981,#27e6b8);box-shadow:0 8px 25px rgba(16,185,129,.35);
+      transition:transform .08s ease;
+    }
+    .cta:disabled{opacity:.6;cursor:not-allowed;box-shadow:none}
+    .cta:active{transform:translateY(1px)}
+    .foot-note{font-size:12px;color:var(--muted)}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px dashed var(--line);border-radius:12px;background:rgba(255,255,255,.02)}
+    .flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .toast{
+      position:fixed;right:16px;bottom:16px;background:var(--card-2);border:1px solid var(--line);padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);font-size:14px;display:none
+    }
+    .ok{color:#34d399}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="flex" style="margin-bottom:18px">
+      <span class="tag">Checkout Seguro</span>
+      <span class="pill">UTMs preservadas</span>
+      <span class="pill">PIX & Cartão</span>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT: CHECKOUT FORM -->
+      <div class="card pad">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+          <div>
+            <div class="title" style="font-size:24px">Produto 1</div>
+            <div class="muted">Pagamento rápido e seguro</div>
+          </div>
+          <div class="price">R$ <span id="basePrice">37,00</span></div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="row">
+          <div class="col">
+            <label class="small" for="nome">Nome completo</label>
+            <input id="nome" type="text" placeholder="Seu nome" autocomplete="name">
+          </div>
+          <div class="col">
+            <label class="small" for="email">E-mail</label>
+            <input id="email" type="email" placeholder="voce@email.com" autocomplete="email">
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <label class="small" for="cpf">CPF (somente números)</label>
+          <input id="cpf" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="00000000000" maxlength="14">
+        </div>
+
+        <div class="hr"></div>
+
+        <div>
+          <div class="title" style="font-size:18px;margin-bottom:6px">Forma de pagamento</div>
+          <div class="pay-select">
+            <button class="btn-tab" id="btnCard" aria-pressed="false">Cartão</button>
+            <button class="btn-tab" id="btnPix" aria-pressed="false">PIX</button>
+          </div>
+        </div>
+
+        <div id="orderBumpsBlock" class="hide" style="margin-top:18px">
+          <div class="title" style="font-size:18px;margin-bottom:10px">Ofertas adicionais (opcional)</div>
+          <div class="ob-list">
+            <label class="ob-item">
+              <input type="checkbox" data-ob="1" data-value="15.00" />
+              <div>
+                <div class="ob-title">Orderbump 01 <span class="badge">+ R$ 15,00</span></div>
+                <div class="muted">Complemento rápido que acelera seus resultados.</div>
+              </div>
+            </label>
+            <label class="ob-item">
+              <input type="checkbox" data-ob="2" data-value="14.90" />
+              <div>
+                <div class="ob-title">Orderbump 02 <span class="badge">+ R$ 14,90</span></div>
+                <div class="muted">Material adicional para elevar o ticket.</div>
+              </div>
+            </label>
+            <label class="ob-item">
+              <input type="checkbox" data-ob="3" data-value="13.21" />
+              <div>
+                <div class="ob-title">Orderbump 03 <span class="badge">+ R$ 13,21</span></div>
+                <div class="muted">Oferta complementar de baixo atrito.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="foot-note">
+          * Nesta primeira etapa não há upsell e nem webhooks — este protótipo é para validar layout, UX, cálculo de total e preservação de UTM.
+        </div>
+      </div>
+
+      <!-- RIGHT: SUMMARY -->
+      <div class="card pad summary">
+        <div class="title" style="font-size:18px">Resumo</div>
+        <div class="line"><span class="muted">Produto 1</span><strong>R$ 37,00</strong></div>
+        <div id="sum-ob"></div>
+        <div class="hr"></div>
+        <div class="line"><span>Subtotal</span><strong id="subtotal">R$ 37,00</strong></div>
+        <div class="line"><span class="muted">Taxas</span><span class="muted">R$ 0,00</span></div>
+        <div class="line total"><span>Total</span><span id="total">R$ 37,00</span></div>
+
+        <div class="hr"></div>
+        <div class="flex" style="margin-bottom:10px">
+          <span class="pill">Pagamento: <strong id="payLabel">—</strong></span>
+          <span class="pill">UTM Source: <strong id="utmSource">—</strong></span>
+        </div>
+
+        <button id="btnPay" class="cta" disabled>Finalizar compra</button>
+        <div class="foot-note" style="margin-top:10px">
+          Seus dados são protegidos. Ao prosseguir, você concorda com os Termos.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // ===== Helpers de moeda (pt-BR) =====
+    const fmtBRL = (n) => (new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(n));
+
+    // ===== Base price =====
+    const BASE_PRICE = 37.00;
+
+    // ===== Estado =====
+    const state = {
+      method: null, // 'card' | 'pix'
+      bumps: {},
+      utm: {},
+    };
+
+    // ===== Elements =====
+    const btnCard = document.getElementById('btnCard');
+    const btnPix = document.getElementById('btnPix');
+    const orderBumpsBlock = document.getElementById('orderBumpsBlock');
+    const sumOb = document.getElementById('sum-ob');
+    const subtotalEl = document.getElementById('subtotal');
+    const totalEl = document.getElementById('total');
+    const payBtn = document.getElementById('btnPay');
+    const payLabel = document.getElementById('payLabel');
+    const utmSource = document.getElementById('utmSource');
+    const toast = document.getElementById('toast');
+
+    function toastMsg(msg, ok=false){
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      toast.style.borderColor = ok ? 'rgba(16,185,129,.5)' : 'var(--line)';
+      toast.className = 'toast' + (ok ? ' ok' : '');
+      setTimeout(()=> toast.style.display='none', 2500);
+    }
+
+    // ===== Toggle método =====
+    function selectMethod(m){
+      state.method = m;
+      btnCard.setAttribute('aria-pressed', m==='card');
+      btnPix.setAttribute('aria-pressed', m==='pix');
+      orderBumpsBlock.classList.remove('hide');
+      payLabel.textContent = (m==='card' ? 'Cartão' : 'PIX');
+      validate();
+      toastMsg('Forma de pagamento: ' + payLabel.textContent, true);
+    }
+
+    btnCard.addEventListener('click', ()=> selectMethod('card'));
+    btnPix .addEventListener('click', ()=> selectMethod('pix'));
+
+    // ===== Bumps =====
+    const obInputs = document.querySelectorAll('.ob-item input[type="checkbox"]');
+    obInputs.forEach(inp=>{
+      inp.addEventListener('change', ()=>{
+        const id = inp.dataset.ob;
+        const val = parseFloat(inp.dataset.value);
+        state.bumps[id] = inp.checked ? val : 0;
+        renderSummary();
+      });
+    });
+
+    function renderSummary(){
+      // linhas de bumps
+      const entries = Object.entries(state.bumps).filter(([k,v])=> v>0);
+      sumOb.innerHTML = entries.map(([k,v])=>{
+        return `<div class="line"><span class="muted">Orderbump 0${k}</span><strong>${fmtBRL(v)}</strong></div>`;
+      }).join('');
+
+      const total = BASE_PRICE + entries.reduce((acc, [,v]) => acc+v, 0);
+      subtotalEl.textContent = fmtBRL(total);
+      totalEl.textContent = fmtBRL(total);
+    }
+
+    renderSummary();
+
+    // ===== UTM capture (preserva na sessão/localStorage) =====
+    function parseUTM(){
+      const params = new URLSearchParams(window.location.search);
+      const utmKeys = ['utm_source','utm_medium','utm_campaign','utm_term','utm_content'];
+      utmKeys.forEach(k=>{
+        if(params.has(k)){
+          state.utm[k] = params.get(k);
+          localStorage.setItem(k, state.utm[k]);
+        }else{
+          const v = localStorage.getItem(k);
+          if(v) state.utm[k] = v;
+        }
+      });
+      utmSource.textContent = state.utm.utm_source || '—';
+    }
+    parseUTM();
+
+    // ===== Validação simples =====
+    function validate(){
+      const nome = document.getElementById('nome').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const cpf = document.getElementById('cpf').value.trim();
+      const ok = !!(nome && email && cpf && state.method);
+      payBtn.disabled = !ok;
+    }
+    ['nome','email','cpf'].forEach(id=> document.getElementById(id).addEventListener('input', validate));
+
+    // ===== Clique pagar (fase 1: sem Pagar.me / sem webhook) =====
+    payBtn.addEventListener('click', ()=>{
+      const total = totalEl.textContent;
+      const payload = {
+        product: { name: 'Produto 1', basePrice: BASE_PRICE },
+        method: state.method,
+        bumps: Object.entries(state.bumps).filter(([k,v])=> v>0).map(([k,v])=>({ id:k, value:v })),
+        utm: state.utm,
+        buyer: {
+          nome: document.getElementById('nome').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          cpf: document.getElementById('cpf').value.trim(),
+        },
+        totals: { totalFormatted: total }
+      };
+      console.log('PAYLOAD_FASE1', payload);
+      toastMsg('Compra de teste criada (fase 1). Abra o console para ver o payload.', true);
+      // Fase 2: aqui entra a criação de ordem na Pagar.me e redirecionamento/sinalização PIX/cartão
+    });
+  </script>
+</body>
+</html>
