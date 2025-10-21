@@ -250,7 +250,7 @@
     }
     ['nome','email','cpf'].forEach(id=> document.getElementById(id).addEventListener('input', validate));
 
-    // ===== Clique pagar (fase 2: integração com Pagar.me) =====
+    // ===== Clique pagar (corrigido com todos os formatos PIX) =====
     payBtn.addEventListener('click', async () => {
       validate();
       if (payBtn.disabled) return;
@@ -290,18 +290,15 @@
           return;
         }
 
-const tx = data.charges?.[0]?.last_transaction;
-if (tx?.pix_qr_code_url || tx?.qr_code_url) {
-  const url = tx.pix_qr_code_url || tx.qr_code_url;
-  toastMsg("PIX gerado com sucesso!", true);
-  window.open(url, "_blank");
-  console.log("QR Code PIX:", url);
-} else if (tx?.qr_code) {
-  // Caso o retorno traga o código base64, só mostra o texto no console
-  console.log("QR Code base64:", tx.qr_code);
-  toastMsg("QR Code PIX gerado — veja no console.", true);
-}
-
+        const tx = data.charges?.[0]?.last_transaction;
+        if (tx?.pix_qr_code_url || tx?.qr_code_url) {
+          const url = tx.pix_qr_code_url || tx.qr_code_url;
+          toastMsg("PIX gerado com sucesso!", true);
+          window.open(url, "_blank");
+          console.log("QR Code PIX:", url);
+        } else if (tx?.qr_code) {
+          console.log("QR Code base64:", tx.qr_code);
+          toastMsg("QR Code PIX gerado — veja no console.", true);
         } else if (data.charges?.[0]?.status) {
           toastMsg("Cartão autorizado com sucesso!", true);
         } else {
