@@ -145,7 +145,7 @@
         <div class="hr"></div>
 
         <div class="foot-note">
-          * Nesta primeira etapa não há upsell e nem webhooks — este protótipo é para validar layout, UX, cálculo de total e preservação de UTM.
+          * Pagamento seguro via Pagar.me (modo teste). PIX e Cartão de crédito disponíveis.
         </div>
       </div>
 
@@ -156,7 +156,6 @@
         <div id="sum-ob"></div>
         <div class="hr"></div>
         <div class="line"><span>Subtotal</span><strong id="subtotal">R$ 37,00</strong></div>
-        <div class="line"><span class="muted">Taxas</span><span class="muted">R$ 0,00</span></div>
         <div class="line total"><span>Total</span><span id="total">R$ 37,00</span></div>
 
         <div class="hr"></div>
@@ -176,20 +175,9 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    // ===== Helpers de moeda (pt-BR) =====
     const fmtBRL = (n) => (new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(n));
-
-    // ===== Base price =====
     const BASE_PRICE = 37.00;
-
-    // ===== Estado =====
-    const state = {
-      method: null, // 'card' | 'pix'
-      bumps: {},
-      utm: {},
-    };
-
-    // ===== Elements =====
+    const state = { method: null, bumps: {}, utm: {} };
     const btnCard = document.getElementById('btnCard');
     const btnPix = document.getElementById('btnPix');
     const orderBumpsBlock = document.getElementById('orderBumpsBlock');
@@ -204,12 +192,10 @@
     function toastMsg(msg, ok=false){
       toast.textContent = msg;
       toast.style.display = 'block';
-      toast.style.borderColor = ok ? 'rgba(16,185,129,.5)' : 'var(--line)';
       toast.className = 'toast' + (ok ? ' ok' : '');
-      setTimeout(()=> toast.style.display='none', 2500);
+      setTimeout(()=> toast.style.display='none', 3000);
     }
 
-    // ===== Toggle método =====
     function selectMethod(m){
       state.method = m;
       btnCard.setAttribute('aria-pressed', m==='card');
@@ -217,13 +203,11 @@
       orderBumpsBlock.classList.remove('hide');
       payLabel.textContent = (m==='card' ? 'Cartão' : 'PIX');
       validate();
-      toastMsg('Forma de pagamento: ' + payLabel.textContent, true);
     }
 
     btnCard.addEventListener('click', ()=> selectMethod('card'));
     btnPix .addEventListener('click', ()=> selectMethod('pix'));
 
-    // ===== Bumps =====
     const obInputs = document.querySelectorAll('.ob-item input[type="checkbox"]');
     obInputs.forEach(inp=>{
       inp.addEventListener('change', ()=>{
@@ -235,20 +219,13 @@
     });
 
     function renderSummary(){
-      // linhas de bumps
       const entries = Object.entries(state.bumps).filter(([k,v])=> v>0);
-      sumOb.innerHTML = entries.map(([k,v])=>{
-        return `<div class="line"><span class="muted">Orderbump 0${k}</span><strong>${fmtBRL(v)}</strong></div>`;
-      }).join('');
-
+      sumOb.innerHTML = entries.map(([k,v])=>`<div class="line"><span class="muted">Orderbump 0${k}</span><strong>${fmtBRL(v)}</strong></div>`).join('');
       const total = BASE_PRICE + entries.reduce((acc, [,v]) => acc+v, 0);
       subtotalEl.textContent = fmtBRL(total);
       totalEl.textContent = fmtBRL(total);
     }
 
-    renderSummary();
-
-    // ===== UTM capture (preserva na sessão/localStorage) =====
     function parseUTM(){
       const params = new URLSearchParams(window.location.search);
       const utmKeys = ['utm_source','utm_medium','utm_campaign','utm_term','utm_content'];
@@ -265,34 +242,70 @@
     }
     parseUTM();
 
-    // ===== Validação simples =====
     function validate(){
       const nome = document.getElementById('nome').value.trim();
       const email = document.getElementById('email').value.trim();
       const cpf = document.getElementById('cpf').value.trim();
-      const ok = !!(nome && email && cpf && state.method);
-      payBtn.disabled = !ok;
+      payBtn.disabled = !(nome && email && cpf && state.method);
     }
     ['nome','email','cpf'].forEach(id=> document.getElementById(id).addEventListener('input', validate));
 
-    // ===== Clique pagar (fase 1: sem Pagar.me / sem webhook) =====
-    payBtn.addEventListener('click', ()=>{
-      const total = totalEl.textContent;
+    // ===== Clique pagar (fase 2: integração com Pagar.me) =====
+    payBtn.addEventListener('click', async () => {
+      validate();
+      if (payBtn.disabled) return;
+
+      payBtn.disabled = true;
+      payBtn.textContent = "Processando...";
+
+      const bumps = Object.entries(state.bumps)
+        .filter(([k, v]) => v > 0)
+        .map(([k, v]) => ({ id: k, value: v }));
+
       const payload = {
-        product: { name: 'Produto 1', basePrice: BASE_PRICE },
         method: state.method,
-        bumps: Object.entries(state.bumps).filter(([k,v])=> v>0).map(([k,v])=>({ id:k, value:v })),
-        utm: state.utm,
         buyer: {
-          nome: document.getElementById('nome').value.trim(),
-          email: document.getElementById('email').value.trim(),
-          cpf: document.getElementById('cpf').value.trim(),
+          nome: document.getElementById("nome").value.trim(),
+          email: document.getElementById("email").value.trim(),
+          cpf: document.getElementById("cpf").value.trim(),
         },
-        totals: { totalFormatted: total }
+        bumps,
+        total: totalEl.textContent,
       };
-      console.log('PAYLOAD_FASE1', payload);
-      toastMsg('Compra de teste criada (fase 1). Abra o console para ver o payload.', true);
-      // Fase 2: aqui entra a criação de ordem na Pagar.me e redirecionamento/sinalização PIX/cartão
+
+      try {
+        const resp = await fetch("/api/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await resp.json();
+        console.log("Resposta Pagar.me:", data);
+
+        if (!resp.ok) {
+          toastMsg("Erro ao criar pagamento: " + (data.error || "tente novamente"));
+          payBtn.disabled = false;
+          payBtn.textContent = "Finalizar compra";
+          return;
+        }
+
+        if (data.charges?.[0]?.last_transaction?.qr_code_url) {
+          const url = data.charges[0].last_transaction.qr_code_url;
+          toastMsg("PIX gerado com sucesso!", true);
+          window.open(url, "_blank");
+        } else if (data.charges?.[0]?.status) {
+          toastMsg("Cartão autorizado com sucesso!", true);
+        } else {
+          toastMsg("Pedido criado, verifique o console.", true);
+        }
+      } catch (err) {
+        console.error(err);
+        toastMsg("Erro ao processar pagamento.");
+      } finally {
+        payBtn.disabled = false;
+        payBtn.textContent = "Finalizar compra";
+      }
     });
   </script>
 </body>
