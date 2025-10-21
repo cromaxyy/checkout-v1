@@ -1,6 +1,6 @@
 // api/create-order.js
-// Rota serverless (Vercel). NÃO expõe suas chaves.
-// Requer as envs: PAGARME_SK_TEST (obrigatória) e PAGARME_PK_TEST (opcional)
+// Rota serverless (Vercel). Integra checkout com Pagar.me (sandbox).
+// Usa variáveis de ambiente: PAGARME_SK_TEST e PAGARME_PK_TEST
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -15,7 +15,6 @@ export default async function handler(req, res) {
   try {
     const { method, buyer, bumps = [] } = req.body || {};
 
-    // --------- Validações mínimas ---------
     if (!method || !["pix", "card", "credit_card"].includes(method)) {
       return res.status(400).json({ error: "Forma de pagamento inválida" });
     }
@@ -23,20 +22,19 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Dados do comprador incompletos" });
     }
 
-    // Sanitiza CPF (remove tudo que não for número) e limita a 11 dígitos
+    // Limpa CPF (só números)
     const cpf = String(buyer.cpf).replace(/\D/g, "").slice(0, 11);
     if (cpf.length !== 11) {
       return res.status(400).json({
         error: "CPF inválido",
-        hint: "Para sandbox, use 12345678909 (somente números).",
-        field: "customer.document",
+        hint: "Use 12345678909 (somente números).",
       });
     }
 
-    // --------- Itens (em centavos) ---------
+    // Itens
     const items = [
       {
-        amount: Math.round(37 * 100), // Produto 1
+        amount: Math.round(37 * 100),
         description: "Produto 1",
         quantity: 1,
         code: "produto1",
@@ -44,8 +42,8 @@ export default async function handler(req, res) {
     ];
 
     bumps
-      .filter(b => b && b.value)
-      .forEach(b => {
+      .filter((b) => b && b.value)
+      .forEach((b) => {
         items.push({
           amount: Math.round(parseFloat(b.value) * 100),
           description: `Orderbump ${b.id}`,
@@ -54,7 +52,7 @@ export default async function handler(req, res) {
         });
       });
 
-    // --------- Payload da Order (Pagar.me v5) ---------
+    // Payload da Order
     const orderPayload = {
       items,
       customer: {
@@ -67,15 +65,19 @@ export default async function handler(req, res) {
         method === "pix" || method === "PIX"
           ? {
               payment_method: "pix",
-              pix: { expires_in: 3600 }, // 1h
+              pix: {
+                expires_in: 3600,
+                additional_information: [
+                  { name: "Produto", value: "Produto 1" },
+                  { name: "Email", value: buyer.email },
+                ],
+              },
             }
           : {
               payment_method: "credit_card",
               credit_card: {
                 operation_type: "auth_and_capture",
                 installments: 1,
-                // Para sandbox: usamos um cartão de teste fixo no backend.
-                // Em produção, você vai tokenizar o card no front com a pk.
                 card: {
                   number: "4000000000000010",
                   holder_name: buyer.nome,
@@ -88,7 +90,6 @@ export default async function handler(req, res) {
       ],
     };
 
-    // --------- Chamada à API ---------
     const r = await fetch("https://api.pagar.me/core/v5/orders", {
       method: "POST",
       headers: {
@@ -100,7 +101,6 @@ export default async function handler(req, res) {
 
     const data = await r.json();
 
-    // Encaminha erro com mais clareza pro front
     if (!r.ok) {
       return res.status(r.status).json({
         error: data?.message || "Erro na Pagar.me",
@@ -108,7 +108,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Sucesso
     return res.status(200).json(data);
   } catch (err) {
     console.error("Erro inesperado:", err);
